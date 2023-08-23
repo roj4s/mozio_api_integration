@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Flask SocketIo Celery Docker example</title>
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+    />
+    <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <script
+      type="text/javascript"
+      src="//cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.0/socket.io.min.js"
+    ></script>
+    <script type="text/javascript" charset="utf-8">
+      var socket;
+      $(document).ready(function () {
+        namespace = '/a';
+        socket = io.connect(
+          location.protocol +
+            '//' +
+            document.domain +
+            ':' +
+            location.port +
+            namespace
+        );
+
+        socket.on('connect', function () {
+          socket.emit('web_event', { data: 'CONNECT' });
+        });
+
+        socket.on('resp', function (msg) {
+          $('#conn_status').append(
+            '<br>' +
+              $('<div/>')
+                .text('Received #' + ': ' + msg.data)
+                .html()
+          );
+        });
+        socket.on('resp', function (msg) {
+          $('#response_container').append(
+            '<br>' +
+              $('<div/>')
+                .text('Received #' + ': ' + msg.data)
+                .html()
+          );
+        });
+      });
+
+      $(window).on('beforeunload', function () {
+        socket.emit('disconnect_request');
+      });
+
+      function send() {
+        $('#response1').text('Please wait...');
+        $.ajax({
+          type: 'GET',
+          url: '/start_task/',
+
+          success: function (response) {
+            $('#response_container').html('response' + ':' + response);
+          },
+          error: function (response) {
+            $('#response_container').html('Error connecting<br>' + response);
+          },
+        });
+      }
+    </script>
+  </head>
+  <body>
+    <h1>Flask SocketIO Celery Docker example</h1>
+    <p>Async mode is: <b>{{ async_mode }}</b></p>
+    <div id="conn_status"></div>
+    <h2>Send:</h2>
+    <button id="start-bg-job-blueprint" onclick="send()">Initiate</button
+    ><br /><br />
+
+    <h2>Receive:</h2>
+    <div id="response_container"></div>
+    <br />
+  </body>
+</html>

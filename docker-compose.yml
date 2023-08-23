@@ -1,0 +1,35 @@
+version: '2'
+
+services:
+  redis:
+    image: 'redis:3.0-alpine'
+    command: redis-server --requirepass pass
+    volumes:
+      - 'redis:/var/lib/redis/data'
+    ports:
+      - '6379:6379'
+
+  socket_app:
+    build: .
+    command: >
+      gunicorn --worker-class eventlet -w 1 -b 0.0.0.0:5000
+        --access-logfile -
+        --reload
+        "app.app:create_app()"
+    env_file:
+      - '.env'
+    volumes:
+      - '.:/app'
+    ports:
+      - '5000:5000'
+
+  celery:
+    build: .
+    command: celery -A app.tasks.celery worker
+    env_file:
+      - '.env'
+    volumes:
+      - '.:/app'
+
+volumes:
+  redis:
